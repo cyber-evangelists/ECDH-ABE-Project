@@ -24,6 +24,8 @@ from .edch import *
 import codecs
 import base64
 import requests
+import logging
+logger = logging.getLogger(__name__)
 
 shared_key = b'\xe0\x0fVp:2]~\xf6\xdd\xbc\x15%}SP\xa7\xfe\xd3lT\x16\xeb\x83\xe1V\xce\xbe>\r\x97\x16'
 # -----------------------------------------------------------------------------------------
@@ -457,14 +459,13 @@ def admin_add_patient_view(request):
             user.save()
 
             patient=patientForm.save(commit=False)
-            # patient.user=user
-            # patient.status=True
-            # patient.assignedDoctorId=request.POST.get('assignedDoctorId')
+            patient.user=user
+            patient.status=True
+            patient.assignedDoctorId=request.POST.get('assignedDoctorId')
             # patient.save()
-            docter = models.Doctor.objects.get(pk=request.POST.get('assignedDoctorId'))
-            print('check saved patient',patient)
+            docter = models.Doctor.objects.get(user_id=request.POST.get('assignedDoctorId'))
             patient_to_encrypt = {
-                'user' : patient.user,
+                'user' : patient.user.id,
                 'address' : patient.address,
                 'treatment_type' : patient.treatment_type,
                 'assignedDoctorId' : patient.assignedDoctorId,
@@ -476,12 +477,14 @@ def admin_add_patient_view(request):
                 'bp_1s' : patient.bp_1s,
             }
             docter_to_encrypt = {
-                'username': docter.user.useranme,
+                'username': docter.user.username,
                 'department':docter.department
             }
             responce = requests.post('http://172.29.0.16:5001/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
             if responce.status_code == 200:
                 patient_encrypted = responce.json()
+                print(patient_encrypted)
+                logger.info(patient_encrypted)
                 patient.user = patient_encrypted['user']
                 patient.address = patient_encrypted['address']
                 patient.treatment_type = patient_encrypted['treatment_type']
@@ -493,7 +496,7 @@ def admin_add_patient_view(request):
                 patient.weight_lb = patient_encrypted['weight_lb']
                 patient.weight_lb = patient_encrypted['weight_lb']
                 patient.bp_1s = patient_encrypted['bp_1s']
-                patient.save
+                patient.save()
             my_patient_group = Group.objects.get_or_create(name='PATIENT')
             my_patient_group[0].user_set.add(user)
 
@@ -503,7 +506,7 @@ def admin_add_patient_view(request):
 
 
 
-# #-----------------APPOINTMENT START--------------------------------------------------------------------
+#-----------------APPOINTMENT START--------------------------------------------------------------------
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
 def admin_appointment_view(request):

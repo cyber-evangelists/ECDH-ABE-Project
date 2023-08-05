@@ -1,5 +1,4 @@
-print('check charm..............////////////////...............')
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from charm.toolbox.pairinggroup import PairingGroup,ZR,G1,G2,GT,pair
 from charm.schemes.abenc.abenc_bsw07 import CPabe_BSW07
 import logging
@@ -44,21 +43,33 @@ def encryption():
     try:
         patient_encrypted = {}
         input_json = request.get_json(force=True)
-        logger.info('check recevied data'+str(input_json))
-        msg = ''
+        p_dict = json.loads(input_json['patient'])
+        logger.info('check recevied data'+input_json['patient'])
+        logger.info('check dict')
+        logger.info(p_dict)
         patient_attributes = ['DOCTOR:'+input_json['doctor']['username'], 'CONDITION:'+input_json['patient']['treatment_type']]
         doctor_attributes = ['DOCTOR:'+input_json['doctor']['username']]
         access_policy = '(DOCTOR:'+input_json['doctor']['username']+' and CONDITION:'+input_json['patient']['treatment_type']+')'
         group = PairingGroup('SS512')
         cpabe = CPabe_BSW07(group)
+        c1 = ''
+        c2 = None
         (master_public_key, master_key) = cpabe.setup()
         patient_secret_key = cpabe.keygen(master_public_key, master_key, patient_attributes)
-        for key,value in input_json['patient']:
+        for key,value in p_dict.items():
             cipher_text = cpabe.encrypt(master_public_key, value, access_policy)
+            logger.info('check cipher')
+            logger.info(cipher_text)
             patient_encrypted[key] = base64.b64encode(cipher_text).decode('utf-8')
-        return json.dumps(patient_encrypted)
+            c1 = base64.b64encode(cipher_text).decode('utf-8')
+            c2 = cipher_text
+        # if type(b'4') is bytes:
+        #     return 'type is byte',200
+        # if isinstance('',str):
+        #     return 'string type',201
+        return jsonify({'encryption':patient_encrypted})
     except Exception as error:
-        logger.error('error while encryption:' + error) 
+        logger.error(error) 
 
 if __name__ == "__main__":
     app.run(host='172.29.0.16', port=5001)
