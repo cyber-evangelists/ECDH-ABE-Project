@@ -25,6 +25,7 @@ import codecs
 import base64
 import requests
 import logging
+import json
 logger = logging.getLogger(__name__)
 
 shared_key = b'\xe0\x0fVp:2]~\xf6\xdd\xbc\x15%}SP\xa7\xfe\xd3lT\x16\xeb\x83\xe1V\xce\xbe>\r\x97\x16'
@@ -93,7 +94,7 @@ def api_get_patient_data(request):
 def flask_api(request):
     try:
         print('check flask api...........')
-        responce = requests.post('http://172.29.0.16:5001/encryption',json={'question':'what is the answer?'})
+        responce = requests.get('http://172.29.0.16:5002/check',json={'question':'what is the answer?'})
         print('responce in django')
         return Response(responce.text, status=status.HTTP_200_OK)
     except Exception as err:
@@ -480,23 +481,27 @@ def admin_add_patient_view(request):
                 'username': docter.user.username,
                 'department':docter.department
             }
-            responce = requests.post('http://172.29.0.16:5001/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
-            if responce.status_code == 200:
-                patient_encrypted = responce.json()
-                print(patient_encrypted)
-                logger.info(patient_encrypted)
-                patient.user = patient_encrypted['user']
-                patient.address = patient_encrypted['address']
-                patient.treatment_type = patient_encrypted['treatment_type']
-                patient.assignedDoctorId = patient_encrypted['assignedDoctorId']
-                patient.admitDate = patient_encrypted['admitDate']
-                patient.status = patient_encrypted['status']
-                patient.notes = patient_encrypted['notes']
-                patient.cholesterol_level = patient_encrypted['cholesterol_level']
-                patient.weight_lb = patient_encrypted['weight_lb']
-                patient.weight_lb = patient_encrypted['weight_lb']
-                patient.bp_1s = patient_encrypted['bp_1s']
-                patient.save()
+            try:
+                responce = requests.post('http://172.29.0.16:5007/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
+                if responce.status_code == 200:
+                    patient_encrypted = responce.json()
+                    print(patient_encrypted)
+                    logger.info(patient_encrypted)
+                    patient.user = patient_encrypted['user']
+                    patient.address = patient_encrypted['address']
+                    patient.treatment_type = patient_encrypted['treatment_type']
+                    patient.assignedDoctorId = patient_encrypted['assignedDoctorId']
+                    patient.admitDate = patient_encrypted['admitDate']
+                    patient.status = patient_encrypted['status']
+                    patient.notes = patient_encrypted['notes']
+                    patient.cholesterol_level = patient_encrypted['cholesterol_level']
+                    patient.weight_lb = patient_encrypted['weight_lb']
+                    patient.weight_lb = patient_encrypted['weight_lb']
+                    patient.bp_1s = patient_encrypted['bp_1s']
+                    patient.save()
+            except json.JSONDecodeError as e:
+                print("Error decoding JSON:", e)
+                logger.info(e)
             my_patient_group = Group.objects.get_or_create(name='PATIENT')
             my_patient_group[0].user_set.add(user)
 

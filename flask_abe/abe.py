@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
 from charm.toolbox.pairinggroup import PairingGroup,ZR,G1,G2,GT,pair
-from charm.schemes.abenc.abenc_bsw07 import CPabe_BSW07
+from charm.schemes.abenc.abenc_yct14 import EKPabe
 import logging
 import base64
 import json
+import os
+os.environ['PYTHONUTF8'] = '1'
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -13,63 +15,60 @@ app = Flask(__name__)
 @app.route("/check")
 def hello():
     try:
-        print('test api.............')
-        group = PairingGroup('SS512')
-        cpabe = CPabe_BSW07(group)
+        print('test api')
+        group = PairingGroup('MNT224')
+        kpabe = EKPabe(group)
+        attributes = [ 'ONE1', 'two', 'THREE']
+        (master_public_key, master_key) = kpabe.setup(attributes)
+        policy = '(ONE1 or THREE) and (THREE or two)'
+        secret_key = kpabe.keygen(master_public_key, master_key, policy)
+        print(policy,attributes)
+        print('secrat type',type(secret_key))
+        msg = "Some Random Message"
+        cipher_text = kpabe.encrypt(master_public_key, msg.encode("utf-8"), attributes)
+        print('cipher type',type(cipher_text))
+        decrypted_msg = kpabe.decrypt(cipher_text, secret_key)
+        if(msg==decrypted_msg):
+            print('msg is same',decrypted_msg)
+        else:
+            print('not same msg')
 
-        msg = 'Patient: John Doe, Condition: Heart Disease, Medication: ABC'
-        patient_attributes = ['DOCTOR:DrSmith', 'CONDITION:HeartDisease']
-        doctor_attributes = ['DOCTOR:DrSmith']
-
-        access_policy = '((DOCTOR:DrSmith and CONDITION:HeartDisease) or DOCTOR:DrBrown)'
-
-        (master_public_key, master_key) = cpabe.setup()
-
-        patient_secret_key = cpabe.keygen(master_public_key, master_key, patient_attributes)
-
-        cipher_text = cpabe.encrypt(master_public_key, msg, access_policy)
-
-        doctor_secret_key = cpabe.keygen(master_public_key, master_key, doctor_attributes)
-        decrypted_msg = cpabe.decrypt(master_public_key, doctor_secret_key, cipher_text)
-
-        print("Decrypted Message by Doctor:", decrypted_msg)
-
-        return 'sdfghj14526k'
+        return jsonify({'decrypty':str(decrypted_msg)})
     except Exception as error:
         print('error is:',error)
 
 @app.route("/encryption", methods=['POST'])
 def encryption():
+    print('check data api ')
     try:
+        print('check data try')
         patient_encrypted = {}
         input_json = request.get_json(force=True)
-        p_dict = json.loads(input_json['patient'])
-        logger.info('check recevied data'+input_json['patient'])
-        logger.info('check dict')
-        logger.info(p_dict)
-        patient_attributes = ['DOCTOR:'+input_json['doctor']['username'], 'CONDITION:'+input_json['patient']['treatment_type']]
-        doctor_attributes = ['DOCTOR:'+input_json['doctor']['username']]
-        access_policy = '(DOCTOR:'+input_json['doctor']['username']+' and CONDITION:'+input_json['patient']['treatment_type']+')'
-        group = PairingGroup('SS512')
-        cpabe = CPabe_BSW07(group)
-        c1 = ''
-        c2 = None
-        (master_public_key, master_key) = cpabe.setup()
-        patient_secret_key = cpabe.keygen(master_public_key, master_key, patient_attributes)
+        p_dict = input_json['patient']
+        p_dict['user'] = str(p_dict['user'])
+        p_dict['status'] = str(p_dict['user'])
+        patient_attributes = [input_json['doctor']['username'].upper(),input_json['patient']['treatment_type'].upper(),input_json['doctor']['department'].upper()]
+        policy = '('+input_json['doctor']['username'].upper()+' or '+input_json['doctor']['department'].upper()+') and ('+input_json['doctor']['department'].upper()+' or '+input_json['patient']['treatment_type'].upper()+')'
+        print('check policy and attributes')
+        group = PairingGroup('MNT224')
+        kpabe = EKPabe(group)
+        print('making master keys.....',policy,patient_attributes)
+        (master_public_key, master_key) = kpabe.setup(patient_attributes)
+        print('master key done and secret key making')
+        secret_key = kpabe.keygen(master_public_key, master_key, policy)
+        print('sectar key generated',type(secret_key))
         for key,value in p_dict.items():
-            cipher_text = cpabe.encrypt(master_public_key, value, access_policy)
-            logger.info('check cipher')
-            logger.info(cipher_text)
-            patient_encrypted[key] = base64.b64encode(cipher_text).decode('utf-8')
-            c1 = base64.b64encode(cipher_text).decode('utf-8')
-            c2 = cipher_text
-        # if type(b'4') is bytes:
-        #     return 'type is byte',200
-        # if isinstance('',str):
-        #     return 'string type',201
-        return jsonify({'encryption':patient_encrypted})
+            print('check value',key,value,type(value))
+            if value:
+                cipher_text = kpabe.encrypt(master_public_key, value.encode("utf-8"), patient_attributes)
+                logger.info('check cipher')
+                logger.info(type(cipher_text))
+                patient_encrypted[key] = cipher_text
+                print('check decrypt',kpabe.decrypt(cipher_text, secret_key))
+        patient_encrypted['secret_key'] = secret_key
+        return jsonify(patient_encrypted)
     except Exception as error:
         logger.error(error) 
 
 if __name__ == "__main__":
-    app.run(host='172.29.0.16', port=5001)
+    app.run(host='172.29.0.16', port=5007,debug=True, use_reloader=False)

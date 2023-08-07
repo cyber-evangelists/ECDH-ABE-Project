@@ -31,11 +31,12 @@ RUN echo pwd
 RUN apt-get install -y python3-flask
 RUN pip install charm-crypto
 RUN pip install Flask==0.10.1
+ENV LANG en_US.UTF-8
 ENV FLASK_APP=abe.py
 WORKDIR /app
 COPY . .
 EXPOSE 5000
 
-CMD ["python3", "abe.py"]
+# CMD ["python3", "abe.py"]
 
 
