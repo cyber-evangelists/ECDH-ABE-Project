@@ -91,9 +91,10 @@ def decryption():
     try:
         input_json = request.get_json(force=True)
         print('check decryption',input_json)
+        return 'ok'
     except Exception as error:
         logger.error(error)
 
 
 if __name__ == "__main__":
-    app.run(host='172.29.0.16', port=5002,debug=True, use_reloader=False)
+    app.run(host='172.29.0.16', port=5003,debug=True, use_reloader=False)
