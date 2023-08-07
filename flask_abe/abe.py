@@ -86,7 +86,13 @@ def encryption():
         logger.error(error)
 
 
-
+@app.route("/decryption", methods=['POST'])
+def decryption():
+    try:
+        input_json = request.get_json(force=True)
+        print('check decryption',input_json)
+    except Exception as error:
+        logger.error(error)
 
 
 if __name__ == "__main__":
