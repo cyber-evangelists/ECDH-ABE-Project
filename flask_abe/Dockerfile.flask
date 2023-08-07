@@ -37,6 +37,6 @@ WORKDIR /app
 COPY . .
 EXPOSE 5000
 
-# CMD ["python3", "abe.py"]
+CMD ["python3", "abe.py"]
 
 

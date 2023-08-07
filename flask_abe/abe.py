@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from charm.toolbox.pairinggroup import PairingGroup,ZR,G1,G2,GT,pair
 from charm.schemes.abenc.abenc_yct14 import EKPabe
+from charm.core.engine.util import objectToBytes, bytesToObject
 import logging
 import base64
 import json
@@ -11,6 +12,24 @@ logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
+
+
+group = PairingGroup('MNT224')
+kpabe = EKPabe(group)
+
+def convert_to_bytes_if_element(value):
+    if isinstance(value, ):
+        return value.export()
+    return value
+
+def print_nested_dict(data, indent=0):
+    for key, value in data.items():
+        if isinstance(value, dict):
+            print('{}{}: (dict)'.format(' ' * indent, key))
+            print_nested_dict(value, indent + 4)
+        else:
+            # value = convert_to_bytes_if_element(value)
+            print('{}{}: {} ({})'.format(' ' * indent, key, value, type(value).__name__))
 
 @app.route("/check")
 def hello():
@@ -39,9 +58,7 @@ def hello():
 
 @app.route("/encryption", methods=['POST'])
 def encryption():
-    print('check data api ')
     try:
-        print('check data try')
         patient_encrypted = {}
         input_json = request.get_json(force=True)
         p_dict = input_json['patient']
@@ -50,8 +67,8 @@ def encryption():
         patient_attributes = [input_json['doctor']['username'].upper(),input_json['patient']['treatment_type'].upper(),input_json['doctor']['department'].upper()]
         policy = '('+input_json['doctor']['username'].upper()+' or '+input_json['doctor']['department'].upper()+') and ('+input_json['doctor']['department'].upper()+' or '+input_json['patient']['treatment_type'].upper()+')'
         print('check policy and attributes')
-        group = PairingGroup('MNT224')
-        kpabe = EKPabe(group)
+        # group = PairingGroup('MNT224')
+        # kpabe = EKPabe(group)
         print('making master keys.....',policy,patient_attributes)
         (master_public_key, master_key) = kpabe.setup(patient_attributes)
         print('master key done and secret key making')
@@ -61,14 +78,23 @@ def encryption():
             print('check value',key,value,type(value))
             if value:
                 cipher_text = kpabe.encrypt(master_public_key, value.encode("utf-8"), patient_attributes)
-                logger.info('check cipher')
-                logger.info(type(cipher_text))
-                patient_encrypted[key] = cipher_text
-                print('check decrypt',kpabe.decrypt(cipher_text, secret_key))
-        patient_encrypted['secret_key'] = secret_key
+                patient_encrypted[key] = str(objectToBytes(cipher_text,group))
+        patient_encrypted['secret_key'] = str(objectToBytes(secret_key,group))
+        print_nested_dict(patient_encrypted)
         return jsonify(patient_encrypted)
     except Exception as error:
-        logger.error(error) 
+        logger.error(error)
+
+
+@app.route("/decryption", methods=['POST'])
+def encryption():
+    try:
+        input_json = request.get_json(force=True)
+        global kpabe
+
+    except Exception as error:
+        logger.error(error)
+
 
 if __name__ == "__main__":
-    app.run(host='172.29.0.16', port=5007,debug=True, use_reloader=False)
+    app.run(host='172.29.0.16', port=5002,debug=True, use_reloader=False)

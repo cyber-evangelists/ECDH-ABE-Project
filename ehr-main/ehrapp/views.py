@@ -482,12 +482,12 @@ def admin_add_patient_view(request):
                 'department':docter.department
             }
             try:
-                responce = requests.post('http://172.29.0.16:5007/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
+                responce = requests.post('http://172.29.0.16:5002/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
                 if responce.status_code == 200:
                     patient_encrypted = responce.json()
                     print(patient_encrypted)
                     logger.info(patient_encrypted)
-                    patient.user = patient_encrypted['user']
+                    patient.user = patient.user
                     patient.address = patient_encrypted['address']
                     patient.treatment_type = patient_encrypted['treatment_type']
                     patient.assignedDoctorId = patient_encrypted['assignedDoctorId']
@@ -498,6 +498,7 @@ def admin_add_patient_view(request):
                     patient.weight_lb = patient_encrypted['weight_lb']
                     patient.weight_lb = patient_encrypted['weight_lb']
                     patient.bp_1s = patient_encrypted['bp_1s']
+                    patient.key = patient_encrypted['secret_key']
                     patient.save()
             except json.JSONDecodeError as e:
                 print("Error decoding JSON:", e)

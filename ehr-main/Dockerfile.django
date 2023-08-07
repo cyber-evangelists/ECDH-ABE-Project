@@ -68,6 +68,11 @@ COPY . /app/
 # Expose the port that Django runs on
 EXPOSE 8000
 
+# Make migrations
+RUN python3.10 manage.py makemigrations
+
+# Apply migrations
+RUN python3.10 manage.py migrate
 # Start the Django development server
 CMD ["python3.10", "manage.py", "runserver", "0.0.0.0:8000"]
 

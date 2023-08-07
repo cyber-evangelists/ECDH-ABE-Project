@@ -28,18 +28,18 @@ class Doctor(models.Model):
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_pic = models.ImageField(upload_to='profile_pic/PatientProfilePic/', null=True, blank=True)
-    address = models.CharField(max_length=40)
-    treatment_type = models.CharField(max_length=100, null=False)
-    assignedDoctorId = models.PositiveIntegerField(null=True)
-    admitDate = models.DateField(auto_now=True)
-    status = models.BooleanField(default=False)
-    notes = models.TextField(blank=True)
-    cholesterol_level = models.CharField(max_length=20, null=False, default=0)
-    weight_lb = models.CharField(max_length=20, null=False, default=0)
-    bp_1s = models.CharField(max_length=20, null=False, default=0)
-
+    address = models.TextField(blank=True, default='')
+    treatment_type = models.TextField(blank=True, default='')
+    assignedDoctorId = models.TextField(blank=True, default='')
+    admitDate = models.TextField(blank=True, default=timezone.now().strftime('%Y-%m-%d %H:%M:%S'))
+    status = models.TextField(blank=True, default='True')
+    notes = models.TextField(blank=True, default='')
+    cholesterol_level = models.TextField(blank=True, default='0')
+    weight_lb = models.TextField(blank=True, default='0')
+    bp_1s = models.TextField(blank=True, default='0')
+    key  = models.TextField(blank=True, default='',null=True)
     # New Updated Fields
-    last_updated = models.DateTimeField(default=timezone.now)
+    last_updated = models.TextField(blank=True, default=timezone.now().strftime('%Y-%m-%d %H:%M:%S'))
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_patients')
 
 
