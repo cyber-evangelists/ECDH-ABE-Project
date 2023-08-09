@@ -25,6 +25,7 @@ from django.views.decorators.csrf import csrf_exempt
 #-------------FOR ADMIN RELATED URLS
 urlpatterns = [
     path('login-patient', views.patient_login),
+    path('update-patient', views.update_patient),
     path('api/patients/', views.all_patients, name='all-patients'),
     path('api/patient/', views.api_get_patient_data, name='api-get-patient-data'),
     path('api/flask/', views.flask_api, name='flask-api'),

@@ -14,6 +14,7 @@ from django.forms.models import model_to_dict
 import datetime
 from django.utils import timezone
 from django.forms import HiddenInput
+from ehrapp.signals import doctor_details_edited
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -225,31 +226,86 @@ def afterlogin_view(request):
 
 @api_view(['GET'])
 def afterlogin_view_encryption(request):
-    print('check user',request.user)
-    try:
-        accountapproval = models.Doctor.objects.all().filter(user_id=87)
-        if accountapproval:
-            patient = models.Patient.objects.all().filter(assignedDoctorId=accountapproval[0].user_id)
-            decrypt_patient = PatientSerializer(patient).data
-            doctor = {
-                'user_id': accountapproval[0].user.id,
-                'username': accountapproval[0].user.username,
-                'department':  accountapproval[0].department,
-            }
-            print('check key in django',type(patient),type(decrypt_patient),decrypt_patient.keys())
-            logger.info(f'check keyes{decrypt_patient.keys()}')
-            responce = requests.post('http://172.29.0.16:5002/decryption',json={'patient':decrypt_patient,'doctor':doctor})
-            if responce.status_code == 200:
-                patient_decrypted = responce.json()
-                return HttpResponse(patient_decrypted)
-            else:
-                return HttpResponse("Invalid user type. Contact your administrator.")
+    print('check user', request.user)
+    # try:
+    accountapproval = models.Doctor.objects.get(user_id=87)
+    if accountapproval:
+        patient = models.Patient.objects.filter(assignedDoctorId=accountapproval.user_id)
+        decrypt_patient = PatientSerializer(patient, many=True).data
+        doctor = {
+            'user_id': accountapproval.user.id,
+            'username': accountapproval.user.username,
+            'department': accountapproval.department,
+        }
+        print('check key in django', type(patient), type(decrypt_patient))
+        response = requests.post('http://172.29.0.16:5010/decryption', json={'patient': decrypt_patient, 'doctor': doctor})
+        if response.status_code == 200:
+            logger.info(response)
+            logger.info(dir(response))
+            patient_decrypted = response.json()
+            logger.info('patient decrypted: ' + str(patient_decrypted))
+            return HttpResponse(patient_decrypted, status=status.HTTP_200_OK)
         else:
-            return HttpResponse(request.user.id)
-    except Exception as error:
-        HttpResponse(error,status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return HttpResponse("flask have responce ", status=status.HTTP_404_NOT_FOUND)
+    else:
+        return HttpResponse("doctor data not found", status=status.HTTP_404_NOT_FOUND)
+    # except Exception as error:
+    #     return HttpResponse(error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['PUT'])
+def update_patient(request):
+    doctorId = request.data.get('doctorId')
+    cholesterol_level = request.data.get('cholesterol_level')
+    treatment_type = request.data.get('treatment_type')
+    weight_lb = request.data.get('weight_lb')
+    address = request.data.get('address')
+    notes = request.data.get('notes')
+    status = request.data.get('status')
+    bp_1s = request.data.get('bp_1s')
+    patient_id = request.data.get('patient_id')
+    current_time = datetime.datetime.now()
+    docter = models.Doctor.objects.get(user_id=doctorId)
+
+    patient_to_encrypt = {
+                'user' : patient_id,
+                'address' : address,
+                'treatment_type' : treatment_type,
+                'admitDate' : current_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'status' : status,
+                'notes' : notes,
+                'cholesterol_level' : cholesterol_level,
+                'weight_lb' : weight_lb,
+                'bp_1s' : bp_1s,
+                'last_updated':current_time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+    docter_to_encrypt = {
+                'username': docter.user.username,
+                'department':docter.department
+            }
+    responce = requests.post('http://172.29.0.16:5010/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
+    if responce.status_code ==200:
+        patient_encrypted = responce.json()
+        patient = Patient.objects.get(user_id=patient_id)
+        patient.address = patient_encrypted['address']
+        patient.treatment_type = patient_encrypted['treatment_type']
+        patient.admitDate = patient_encrypted['admitDate']
+        patient.status = patient_encrypted['status']
+        patient.notes = patient_encrypted['notes']
+        patient.cholesterol_level = patient_encrypted['cholesterol_level']
+        patient.weight_lb = patient_encrypted['weight_lb']
+        patient.bp_1s = patient_encrypted['bp_1s']
+        patient.decryption = patient_encrypted['secret_key']
+        patient.last_updated = patient_encrypted['last_updated']
+        patient.save()
+        doctor_details_edited.send(sender=docter, instance=doctorId)
+        patient_data = PatientSerializer(patient).data
+        decrypt_reaponce = requests.post('http://172.29.0.16:5010/decryption', json={'patient': [patient_data]})
+        if decrypt_reaponce.status_code == 200:
+            return HttpResponse(decrypt_reaponce)
+        else:
+            return HttpResponse('decryption failed')
+    return HttpResponse('encryption failed')
 
 
 #---------------------------------------------------------------------------------
@@ -479,7 +535,6 @@ def admin_add_patient_view(request):
                 'user' : patient.user.id,
                 'address' : patient.address,
                 'treatment_type' : patient.treatment_type,
-                # 'assignedDoctorId' : patient.assignedDoctorId,
                 'admitDate' : current_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'status' : patient.status,
                 'notes' : patient.notes,

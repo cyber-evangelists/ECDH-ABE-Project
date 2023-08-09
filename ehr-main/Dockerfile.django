@@ -75,5 +75,3 @@ RUN python3.10 manage.py makemigrations
 RUN python3.10 manage.py migrate
 # Start the Django development server
 CMD ["python3.10", "manage.py", "runserver", "0.0.0.0:8000"]
-
-

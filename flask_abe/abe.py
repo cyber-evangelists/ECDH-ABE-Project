@@ -80,65 +80,71 @@ def encryption():
 
 @app.route("/decryption", methods=['POST'])
 def decryption():
-    try:
-        global group,kpabe
+    # try:
+    global group,kpabe
+    all_obj = []
+    input_json = request.get_json(force=True)
+    patients = input_json['patient']
+    for patient in patients:
         decrypted_obj = {}
-        all_obj = []
-        input_json = request.get_json(force=True)
-        patients = input_json['patient']
-        print('check patient',patients,'check json',input_json)
-        for patient in patients:
+        print(patient['user_id'])
+        secrat_key = bytesToObject(ast.literal_eval(patient['decryption']),group)
+        print('secrat type',type(secrat_key))
+        print('check type of address',type(ast.literal_eval(patient['address'])))
+        address_encrypted = bytesToObject(ast.literal_eval(patient['address']),group)
+        check_address = kpabe.decrypt(address_encrypted, secrat_key)
+        print('check address',check_address.decode('utf-8'))
 
-            key = existing_data[patient['user_id']]
-            secrat_key = bytesToObject(ast.literal_eval(key),group)
-            print('secrat type',type(secrat_key))
-            print('check type of address',type(ast.literal_eval(patient['address'])))
-            address_encrypted = bytesToObject(ast.literal_eval(patient['address']),group)
-            check_address = kpabe.decrypt(address_encrypted, secrat_key)
-            print('check address',check_address.decode('utf-8'))
+        admitDate_encrypted = bytesToObject(ast.literal_eval(patient['admitDate']),group)
+        check_admitDate = kpabe.decrypt(admitDate_encrypted, secrat_key)
+        print('check address',check_admitDate.decode('utf-8'))
 
-            admitDate_encrypted = bytesToObject(ast.literal_eval(patient['admitDate']),group)
-            check_admitDate = kpabe.decrypt(admitDate_encrypted, secrat_key)
-            print('check address',check_admitDate.decode('utf-8'))
+        status_encrypted = bytesToObject(ast.literal_eval(patient['status']),group)
+        check_status = kpabe.decrypt(status_encrypted, secrat_key)
+        print('check address',check_status.decode('utf-8'))
 
-            status_encrypted = bytesToObject(ast.literal_eval(patient['status']),group)
-            check_status = kpabe.decrypt(status_encrypted, secrat_key)
-            print('check address',check_status.decode('utf-8'))
+        treatment_type_encrypted = bytesToObject(ast.literal_eval(patient['treatment_type']),group)
+        treatment_type_status = kpabe.decrypt(treatment_type_encrypted, secrat_key)
+        print('check treatment_type',treatment_type_status.decode('utf-8'))
 
-            treatment_type_encrypted = bytesToObject(ast.literal_eval(patient['treatment_type']),group)
-            treatment_type_status = kpabe.decrypt(treatment_type_encrypted, secrat_key)
-            print('check treatment_type',treatment_type_status.decode('utf-8'))
+        bp_1s_encrypted = bytesToObject(ast.literal_eval(patient['bp_1s']),group)
+        bp_1s_status = kpabe.decrypt(bp_1s_encrypted, secrat_key)
+        print('check bp_1s',bp_1s_status.decode('utf-8'))
+        
+        cholesterol_level_encrypted = bytesToObject(ast.literal_eval(patient['cholesterol_level']),group)
+        cholesterol_level_status = kpabe.decrypt(cholesterol_level_encrypted, secrat_key)
+        print('check cholesterol_level',cholesterol_level_status.decode('utf-8'))
 
-            bp_1s_encrypted = bytesToObject(ast.literal_eval(patient['bp_1s']),group)
-            bp_1s_status = kpabe.decrypt(bp_1s_encrypted, secrat_key)
-            print('check bp_1s',bp_1s_status.decode('utf-8'))
-            
-            cholesterol_level_encrypted = bytesToObject(ast.literal_eval(patient['cholesterol_level']),group)
-            cholesterol_level_status = kpabe.decrypt(cholesterol_level_encrypted, secrat_key)
-            print('check cholesterol_level',cholesterol_level_status.decode('utf-8'))
+        notes_encrypted = bytesToObject(ast.literal_eval(patient['notes']),group)
+        notes_status = kpabe.decrypt(notes_encrypted, secrat_key)
+        print('check notes',notes_status.decode('utf-8'))
 
-            notes_encrypted = bytesToObject(ast.literal_eval(patient['notes']),group)
-            notes_status = kpabe.decrypt(notes_encrypted, secrat_key)
-            print('check notes',notes_status.decode('utf-8'))
+        weight_lb_encrypted = bytesToObject(ast.literal_eval(patient['weight_lb']),group)
+        weight_lb_status = kpabe.decrypt(weight_lb_encrypted, secrat_key)
+        print('check weight_lb',weight_lb_status.decode('utf-8'))
 
-            weight_lb_encrypted = bytesToObject(ast.literal_eval(patient['weight_lb']),group)
-            weight_lb_status = kpabe.decrypt(weight_lb_encrypted, secrat_key)
-            print('check weight_lb',weight_lb_status.decode('utf-8'))
+        decrypted_obj={
+            'user_id': str(patient['user_id']),
+            'weight_lb': str(weight_lb_status.decode('utf-8')),
+            'notes': str(notes_status.decode('utf-8')),
+            'cholesterol_level' : str(cholesterol_level_status.decode('utf-8')),
+            'bp_1s' : str(bp_1s_status.decode('utf-8')),
+            'treatment_type' : str(treatment_type_status.decode('utf-8')),
+            'status' : str(check_status.decode('utf-8')),
+            'address' : str(check_address.decode('utf-8')),
+        }
+        print(decrypted_obj)
+        logger.info('decrypted object :'+str(decrypted_obj))    
+        all_obj.append(decrypted_obj)
+        print(all_obj)
+        # logger.info('all decrypted object :'+type(all_obj))
+        logger.info('all decrypted object :'+str(all_obj))  
+        logger.info('all decrypted josnoify object :'+ json.dumps(all_obj) )
 
-            decrypted_obj['weight_lb'] = weight_lb_status.decode('utf-8')
-            decrypted_obj['notes'] = notes_status.decode('utf-8')
-            decrypted_obj['cholesterol_level'] = cholesterol_level_status.decode('utf-8')
-            decrypted_obj['bp_1s'] = bp_1s_status.decode('utf-8')
-            decrypted_obj['treatment_type'] = treatment_type_status.decode('utf-8')
-            decrypted_obj['status'] = check_status.decode('utf-8')
-            # decrypted_obj['admitDate'] = check_assignedDoctorId.decode('utf-8')
-            decrypted_obj['address'] = check_address.decode('utf-8')
-            all_obj.append(decrypted_obj)
-
-        return jsonify(all_obj)
-    except Exception as error:
-        logger.error(error)
+    return json.dumps(all_obj)
+    # except Exception as error:
+    #     logger.error('decryption error :'+str(error))
 
 
 if __name__ == "__main__":
-    app.run(host='172.29.0.16', port=5002,debug=True, use_reloader=False)
+    app.run(host='172.29.0.16', port=5010,debug=True, use_reloader=False)
