@@ -31,15 +31,15 @@ class Patient(models.Model):
     address = models.TextField(blank=True, default='')
     treatment_type = models.TextField(blank=True, default='')
     assignedDoctorId = models.TextField(blank=True, default='')
-    admitDate = models.TextField(blank=True, default=timezone.now().strftime('%Y-%m-%d %H:%M:%S'))
+    admitDate = models.TextField(blank=True, default='')
     status = models.TextField(blank=True, default='True')
     notes = models.TextField(blank=True, default='')
     cholesterol_level = models.TextField(blank=True, default='0')
     weight_lb = models.TextField(blank=True, default='0')
     bp_1s = models.TextField(blank=True, default='0')
-    key  = models.TextField(blank=True, default='',null=True)
+    decryption  = models.TextField(blank=True, default='',null=True)
     # New Updated Fields
-    last_updated = models.TextField(blank=True, default=timezone.now().strftime('%Y-%m-%d %H:%M:%S'))
+    last_updated = models.TextField(blank=True, default='')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_patients')
 
 

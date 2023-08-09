@@ -47,6 +47,7 @@ urlpatterns = [
 
 
     path('afterlogin', views.afterlogin_view,name='afterlogin'),
+    path('afterlogin-encryption', views.afterlogin_view_encryption,name='afterlogin-encryption'),
     path('logout', LogoutView.as_view(template_name='hospital/index.html'),name='logout'),
 
 

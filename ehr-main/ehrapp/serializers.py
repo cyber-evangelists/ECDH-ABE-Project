@@ -7,10 +7,11 @@ class PatientSerializer(serializers.ModelSerializer):
     # Add fields for the user's first name and last name
     user_first_name = serializers.ReadOnlyField(source='user.first_name')
     user_last_name = serializers.ReadOnlyField(source='user.last_name')
+    user_id = serializers.ReadOnlyField(source='user.id')
 
     class Meta:
         model = Patient
-        fields = ['id', 'user_first_name', 'user_last_name', 'address', 'treatment_type', 'cholesterol_level', 'weight_lb', 'bp_1s', 'notes', 'status', 'assignedDoctorId', 'last_updated', 'updated_by']
+        fields = ['id', 'user_id', 'user_first_name', 'user_last_name', 'address', 'treatment_type', 'cholesterol_level', 'weight_lb', 'bp_1s', 'notes', 'status', 'assignedDoctorId', 'last_updated', 'updated_by', 'decryption']
 
 
 class UserSerializer(serializers.ModelSerializer):

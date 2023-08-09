@@ -11,7 +11,7 @@ from datetime import datetime,timedelta,date
 from django.conf import settings
 from django.db.models import Q
 from django.forms.models import model_to_dict
-
+import datetime
 from django.utils import timezone
 from django.forms import HiddenInput
 
@@ -206,76 +206,48 @@ def is_patient(user):
 
 
 #---------AFTER ENTERING CREDENTIALS WE CHECK WHETHER USERNAME AND PASSWORD IS OF ADMIN,DOCTOR OR PATIENT
-# def afterlogin_view(request):
-#     if is_admin(request.user):
-#         return redirect('admin-dashboard')
-#     elif is_doctor(request.user):
-#         accountapproval=models.Doctor.objects.all().filter(user_id=request.user.id,status=True)
-#         if accountapproval:
-#             return redirect('doctor-dashboard')
-#         else:
-#             return render(request,'hospital/doctor_wait_for_approval.html')
-#     elif is_patient(request.user):
-#         accountapproval=models.Patient.objects.all().filter(user_id=request.user.id,status=True)
-#         if accountapproval:
-#             return redirect('patient-dashboard')
-#         else:
-#             return render(request,'hospital/patient_wait_for_approval.html')
-
 def afterlogin_view(request):
     if is_admin(request.user):
         return redirect('admin-dashboard')
     elif is_doctor(request.user):
-        accountapproval = models.Doctor.objects.all().filter(user_id=request.user.id, status=True)
+        accountapproval=models.Doctor.objects.all().filter(user_id=request.user.id,status=True)
         if accountapproval:
-            decrypt_patient = {}
-            patient = models.Patient.objects.get(user_id=90)
-            # decrypt_patient = {
-            #     'user' : patient.user.id,
-            #     'address' : patient.address,
-            #     'treatment_type' : patient.treatment_type,
-            #     'assignedDoctorId' : patient.assignedDoctorId,
-            #     'admitDate' : patient.admitDate,
-            #     'status' : patient.status,
-            #     'notes' : patient.notes,
-            #     'cholesterol_level' : patient.cholesterol_level,
-            #     'weight_lb' : patient.weight_lb,
-            #     'bp_1s' : patient.bp_1s,
-            #     'key':patient.key
-            # }
-            doctor = {
-                'user_id':accountapproval[0].user.id,
-                'username':accountapproval[0].user.username,
-                'department': accountapproval[0].department,
-            }
-            responce = requests.post('http://172.29.0.16:5003/decryption',json={'patient':PatientSerializer(patient).data,'doctor':doctor})
-                # if responce.status_code == 200:
-                #     patient_encrypted = responce.json()
-                #     print(patient_encrypted)
-                #     logger.info(patient_encrypted)
-                #     decrypt_patient.user = patient.user
-                #     decrypt_patient.address = patient_encrypted['address']
-                #     decrypt_patient.treatment_type = patient_encrypted['treatment_type']
-                #     decrypt_patient.assignedDoctorId = patient_encrypted['assignedDoctorId']
-                #     decrypt_patient.admitDate = patient_encrypted['admitDate']
-                #     decrypt_patient.status = patient_encrypted['status']
-                #     decrypt_patient.notes = patient_encrypted['notes']
-                #     decrypt_patient.cholesterol_level = patient_encrypted['cholesterol_level']
-                #     decrypt_patient.weight_lb = patient_encrypted['weight_lb']
-                #     decrypt_patient.weight_lb = patient_encrypted['weight_lb']
-                #     decrypt_patient.bp_1s = patient_encrypted['bp_1s']
             return redirect('doctor-dashboard')
         else:
-            return render(request, 'hospital/doctor_wait_for_approval.html')
+            return render(request,'hospital/doctor_wait_for_approval.html')
     elif is_patient(request.user):
-        accountapproval = models.Patient.objects.all().filter(user_id=request.user.id, status=True)
+        accountapproval=models.Patient.objects.all().filter(user_id=request.user.id,status=True)
         if accountapproval:
             return redirect('patient-dashboard')
         else:
-            return render(request, 'hospital/patient_wait_for_approval.html')
-
-    # Add a default return statement here to handle cases where none of the conditions match.
+            return render(request,'hospital/patient_wait_for_approval.html')
     return HttpResponse("Invalid user type. Contact your administrator.")
+
+@api_view(['GET'])
+def afterlogin_view_encryption(request):
+    print('check user',request.user)
+    try:
+        accountapproval = models.Doctor.objects.all().filter(user_id=87)
+        if accountapproval:
+            patient = models.Patient.objects.all().filter(assignedDoctorId=accountapproval[0].user_id)
+            decrypt_patient = PatientSerializer(patient).data
+            doctor = {
+                'user_id': accountapproval[0].user.id,
+                'username': accountapproval[0].user.username,
+                'department':  accountapproval[0].department,
+            }
+            print('check key in django',type(patient),type(decrypt_patient),decrypt_patient.keys())
+            logger.info(f'check keyes{decrypt_patient.keys()}')
+            responce = requests.post('http://172.29.0.16:5002/decryption',json={'patient':decrypt_patient,'doctor':doctor})
+            if responce.status_code == 200:
+                patient_decrypted = responce.json()
+                return HttpResponse(patient_decrypted)
+            else:
+                return HttpResponse("Invalid user type. Contact your administrator.")
+        else:
+            return HttpResponse(request.user.id)
+    except Exception as error:
+        HttpResponse(error,status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -502,47 +474,60 @@ def admin_add_patient_view(request):
             patient.assignedDoctorId=request.POST.get('assignedDoctorId')
             # patient.save()
             docter = models.Doctor.objects.get(user_id=request.POST.get('assignedDoctorId'))
+            current_time = datetime.datetime.now()
             patient_to_encrypt = {
                 'user' : patient.user.id,
                 'address' : patient.address,
                 'treatment_type' : patient.treatment_type,
-                'assignedDoctorId' : patient.assignedDoctorId,
-                'admitDate' : patient.admitDate,
+                # 'assignedDoctorId' : patient.assignedDoctorId,
+                'admitDate' : current_time.strftime('%Y-%m-%d %H:%M:%S'),
                 'status' : patient.status,
                 'notes' : patient.notes,
                 'cholesterol_level' : patient.cholesterol_level,
                 'weight_lb' : patient.weight_lb,
                 'bp_1s' : patient.bp_1s,
+                'last_updated':current_time.strftime('%Y-%m-%d %H:%M:%S')
             }
             docter_to_encrypt = {
                 'username': docter.user.username,
                 'department':docter.department
             }
             try:
-                responce = requests.post('http://172.29.0.16:5001/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
+                responce = requests.post('http://172.29.0.16:5005/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
                 if responce.status_code == 200:
                     patient_encrypted = responce.json()
-                    print(patient_encrypted)
                     logger.info(patient_encrypted)
                     patient.user = patient.user
                     patient.address = patient_encrypted['address']
                     patient.treatment_type = patient_encrypted['treatment_type']
-                    patient.assignedDoctorId = patient_encrypted['assignedDoctorId']
+                    patient.assignedDoctorId = patient.assignedDoctorId
                     patient.admitDate = patient_encrypted['admitDate']
                     patient.status = patient_encrypted['status']
                     patient.notes = patient_encrypted['notes']
                     patient.cholesterol_level = patient_encrypted['cholesterol_level']
                     patient.weight_lb = patient_encrypted['weight_lb']
-                    patient.weight_lb = patient_encrypted['weight_lb']
                     patient.bp_1s = patient_encrypted['bp_1s']
-                    patient.key = patient_encrypted['secret_key']
+                    patient.decryption = patient_encrypted['secret_key']
+                    patient.last_updated = patient_encrypted['last_updated']
                     patient.save()
             except json.JSONDecodeError as e:
                 print("Error decoding JSON:", e)
                 logger.info(e)
             my_patient_group = Group.objects.get_or_create(name='PATIENT')
             my_patient_group[0].user_set.add(user)
+        else:
+            user_errors = None
+            patient_errors = None
+            if not userForm.is_valid():
+                user_errors = userForm.errors
 
+            if not patientForm.is_valid():
+                patient_errors = patientForm.errors
+            for field_name, error_list in user_errors.items():
+                logger.error(f"Errors for user form {field_name}: {', '.join(error_list)}")
+
+            # for field_name, error_list in patient_errors.items():
+                # logger.error(f"Errors for patient form {field_name}: {', '.join(error_list)}")
         return HttpResponseRedirect('admin-view-patient')
     return render(request,'hospital/admin_add_patient.html',context=mydict)
 
