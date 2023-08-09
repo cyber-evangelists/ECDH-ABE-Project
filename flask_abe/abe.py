@@ -55,7 +55,7 @@ def encryption():
         input_json = request.get_json(force=True)
         p_dict = input_json['patient']
         p_dict['user'] = str(p_dict['user'])
-        p_dict['status'] = str(p_dict['user'])
+        p_dict['status'] = str(p_dict['status'])
         patient_attributes = [input_json['doctor']['username'].upper(),input_json['patient']['treatment_type'].upper(),input_json['doctor']['department'].upper()]
         policy = '('+input_json['doctor']['username'].upper()+' or '+input_json['doctor']['department'].upper()+') and ('+input_json['doctor']['department'].upper()+' or '+input_json['patient']['treatment_type'].upper()+')'
         print('check policy and attributes')

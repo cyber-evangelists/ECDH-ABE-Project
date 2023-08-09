@@ -14,7 +14,7 @@ from django.forms.models import model_to_dict
 import datetime
 from django.utils import timezone
 from django.forms import HiddenInput
-from ehrapp.signals import doctor_details_edited
+from ehrapp.signal import doctor_details_edited
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
