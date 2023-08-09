@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/patients/', views.all_patients, name='all-patients'),
     path('api/patient/', views.api_get_patient_data, name='api-get-patient-data'),
     path('api/flask/', views.flask_api, name='flask-api'),
+    path('api/patient-notification',views.get_notification, name='get-notification'),
 
     path('admin/', admin.site.urls),
     path('',views.home_view,name=''),

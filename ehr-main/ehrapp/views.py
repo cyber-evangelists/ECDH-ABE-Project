@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect,reverse, get_object_or_404
 from . import forms,models
-from .models import Patient, User
+from .models import Patient, User, Notification
 from .forms import PatientForm
 from django.db.models import Sum
 from django.contrib.auth.models import Group
@@ -14,7 +14,7 @@ from django.forms.models import model_to_dict
 import datetime
 from django.utils import timezone
 from django.forms import HiddenInput
-from ehrapp.signal import doctor_details_edited
+from django.http import JsonResponse
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -298,7 +298,12 @@ def update_patient(request):
         patient.decryption = patient_encrypted['secret_key']
         patient.last_updated = patient_encrypted['last_updated']
         patient.save()
-        doctor_details_edited.send(sender=docter, instance=doctorId)
+        notification = Notification.objects.create(
+            doctorId=doctorId,
+            patientId=patient_id,
+            msg=f'{docter.user.first_name} {docter.user.last_name} edit your information'
+            )
+        notification.save()
         patient_data = PatientSerializer(patient).data
         decrypt_reaponce = requests.post('http://172.29.0.16:5010/decryption', json={'patient': [patient_data]})
         if decrypt_reaponce.status_code == 200:
@@ -307,6 +312,18 @@ def update_patient(request):
             return HttpResponse('decryption failed')
     return HttpResponse('encryption failed')
 
+@api_view(['GET'])
+def get_notification(request):
+    patient_id = request.data.get('patient_id')
+    latest_notification = Notification.objects.filter(patientId=patient_id).order_by('-created_at').first()
+    notification_dict = {
+        'id': latest_notification.id,
+        'doctorId': latest_notification.doctorId,
+        'patientId': latest_notification.patientId,
+        'msg': latest_notification.msg,
+        'created_at': latest_notification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+    }
+    return JsonResponse(notification_dict)
 
 #---------------------------------------------------------------------------------
 #------------------------ ADMIN RELATED VIEWS START ------------------------------

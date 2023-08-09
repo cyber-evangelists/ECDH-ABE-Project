@@ -61,3 +61,10 @@ class Appointment(models.Model):
     appointmentDate=models.DateField(auto_now=True)
     description=models.TextField(max_length=500)
     status=models.BooleanField(default=False)
+
+
+class Notification(models.Model):
+    doctorId=models.PositiveIntegerField(null=True,blank=True)
+    patientId=models.PositiveIntegerField(null=True,blank=True)
+    msg = models.CharField(max_length=40,null=True,blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
