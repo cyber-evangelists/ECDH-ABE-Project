@@ -316,14 +316,19 @@ def update_patient(request):
 def get_notification(request):
     patient_id = request.data.get('patient_id')
     latest_notification = Notification.objects.filter(patientId=patient_id).order_by('-created_at').first()
-    notification_dict = {
-        'id': latest_notification.id,
-        'doctorId': latest_notification.doctorId,
-        'patientId': latest_notification.patientId,
-        'msg': latest_notification.msg,
-        'created_at': latest_notification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-    }
-    return JsonResponse(notification_dict)
+    if latest_notification:
+        notification_dict = {
+            'id': latest_notification.id,
+            'doctorId': latest_notification.doctorId,
+            'patientId': latest_notification.patientId,
+            'msg': latest_notification.msg,
+            'created_at': latest_notification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        Notification.objects.filter(patientId=patient_id).order_by('-created_at').first().delete()
+        return JsonResponse(notification_dict)
+    else:
+        return JsonResponse({'notifucation':'empty'})
+
 
 #---------------------------------------------------------------------------------
 #------------------------ ADMIN RELATED VIEWS START ------------------------------
