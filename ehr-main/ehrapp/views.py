@@ -40,15 +40,19 @@ def patient_login(request):
     username = request.data.get('username')
     password = request.data.get('password')
     userpublickeypem = request.data.get('userpublickeypem')
+    print('username:...................',username)
     user = User.objects.filter(username=username).first()
-    if user and user.check_password(password):
-        login(request, user)
-        userpublickeypem = userpublickeypem.replace('\\n', '\n')
-        byte_key = userpublickeypem.encode("utf-8")
-        global shared_key
-        shared_key = generate_shared_secret_on_server(generate_server_keys_for_server(),byte_key)
-        return Response({'message': 'Login successful','shared_key':base64.b64encode(shared_key).decode('utf-8')}, status=status.HTTP_200_OK)
-    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    if user:
+        if user.check_password(password):
+            login(request, user)
+            userpublickeypem = userpublickeypem.replace('\\n', '\n')
+            byte_key = userpublickeypem.encode("utf-8")
+            global shared_key
+            shared_key = generate_shared_secret_on_server(generate_server_keys_for_server(),byte_key)
+            return Response({'message': 'Login successful','shared_key':base64.b64encode(shared_key).decode('utf-8')}, status=status.HTTP_200_OK)
+        else:
+                return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])

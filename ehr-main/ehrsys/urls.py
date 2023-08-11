@@ -20,11 +20,11 @@ from ehrapp import views
 from django.contrib.auth.views import LoginView,LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 #-------------FOR ADMIN RELATED URLS
 urlpatterns = [
-    path('login-patient', views.patient_login),
+    path('login-patient', ensure_csrf_cookie(views.patient_login)),
     path('update-patient', views.update_patient),
     path('api/patients/', views.all_patients, name='all-patients'),
     path('api/patient/', views.api_get_patient_data, name='api-get-patient-data'),
