@@ -1,0 +1,170 @@
+{
+	"info": {
+		"_postman_id": "e15dc7bd-1ecb-4c52-a329-f47632b4c08a",
+		"name": "ECDH",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24058112"
+	},
+	"item": [
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-CSRFToken",
+						"value": "gSbPjYkLjoWvpkArqHOEhEg4lZoEzpAo",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "patient1",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "1am@Campus",
+							"type": "text"
+						},
+						{
+							"key": "userpublickeypem",
+							"value": "-----BEGIN PUBLIC KEY-----\\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFIntYXwUBaXrIg3jBIQIQPwD7ohn\\n+CLy1+kL804Oz4F6lv62Bzs8MVFg8Rnehs+3JByrjzWuesNTwElSMDETcA==\\n-----END PUBLIC KEY-----\\n",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/login-patient",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"login-patient"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "all patients",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "patient",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "flask",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "CSRFToken",
+						"value": "gSbPjYkLjoWvpkArqHOEhEg4lZoEzpAo",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/flask/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"flask",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "decrypt",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-CSRFToken",
+						"value": "gSbPjYkLjoWvpkArqHOEhEg4lZoEzpAo",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/afterlogin-encryption",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"afterlogin-encryption"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update patient",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "get notification",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/get-notification",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"get-notification"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
