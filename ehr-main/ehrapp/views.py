@@ -88,8 +88,9 @@ def api_get_patient_data(request):
     try:
         encrypted_msg = request.data.get('encrypted_msg')
         encrypted_msg, _ = codecs.escape_decode(encrypted_msg, 'hex')
-        patient_id = decrypt_message_on_server(shared_key, encrypted_msg)
-        patient = Patient.objects.get(id=int(patient_id))
+        print('check encryption msg',encrypted_msg,'and shared kay',shared_key)
+        # patient_id = decrypt_message_on_server(shared_key, encrypted_msg)
+        patient = Patient.objects.get(user_id=int(98))
         serializered_data = PatientSerializer(patient).data
         encrypted_msg = encrypt_message_on_server(shared_key, str(serializered_data))
         return Response(base64.b64encode(encrypted_msg).decode('utf-8'), status=status.HTTP_200_OK)
@@ -574,7 +575,7 @@ def admin_add_patient_view(request):
                 'department':docter.department
             }
             try:
-                responce = requests.post('http://172.29.0.16:5005/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
+                responce = requests.post('http://172.29.0.16:5010/encryption',json={'patient':patient_to_encrypt,'doctor':docter_to_encrypt})
                 if responce.status_code == 200:
                     patient_encrypted = responce.json()
                     logger.info(patient_encrypted)
