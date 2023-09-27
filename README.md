@@ -56,6 +56,9 @@ Here's why ECDH is commonly used:
 - Perfect Forward Secrecy (PFS): By utilizing ECDH, all data encrypted using the session key remains secure, even if the long-term private keys are exposed later.
 - Support for Elliptic Curve Cryptography: Elliptic curve cryptography offers strong security with shorter key lengths compared to traditional RSA cryptography, making it ideal for resource-constrained devices like mobile phones and IoT devices.
 
+![ECDF working](images/ecdh.png)
+
+
 ## ABE (Attribute-Based Encryption):
 
 ABE is an advanced encryption scheme that allows access control over encrypted data based on attributes or policies defined for users. In ABE, data is encrypted with a set of attributes, and decryption is possible only for users who possess a matching set of attributes that satisfy the access policy.
@@ -66,6 +69,7 @@ Here's why ABE is used:
 - Flexible Access Policies: ABE allows for flexible and expressive access policies to be defined, enabling complex access control scenarios that may involve multiple attributes and logical combinations.
 - Confidentiality in Outsourced Environments: ABE can be particularly useful when data needs to be outsourced to a third-party cloud service while still maintaining fine-grained access control over the encrypted data.
 
+![ABE working](images/abe.png)
 
 ## Prerequisites
 
@@ -90,9 +94,3 @@ Here's why ABE is used:
 - open terminal in the project
 - run command ```docker compose up -d```
 - check backend running on ```http://localhost:8000/```
-
-
-![ECDF working](images/ecdh.png)
-
-![ABE working](images/abe.png)
-
