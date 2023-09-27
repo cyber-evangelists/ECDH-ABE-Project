@@ -90,3 +90,9 @@ Here's why ABE is used:
 - open terminal in the project
 - run command ```docker compose up -d```
 - check backend running on ```http://localhost:8000/```
+
+
+![ECDF working](images/ecdh.png)
+
+![ABE working](images/abe.png)
+
